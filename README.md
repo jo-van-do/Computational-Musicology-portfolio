@@ -3,12 +3,4 @@ This repository will be used to create a portfolio for the course 'Computational
 
 ### Corpus description
 
-
-## Comparison points
-
-
-## Corpus strenghts and limitations
-
-
-## Special considerations
-
+For this assignment I will be conducting an exploratory analysis of the works of Pyotr Ilyich Tchaikovsky (1840-1893) to Gustav Mahler (1860-1911). My reasons for choosing to compare these two artists are mostly personal. I do not know much about classical music, as I mostly tend to listen to contemporary music. An exception to this rule is Tchaikovsky, whose musical pieces I have enjoyed listening to ever since my mother and grandmother took me to see *Swan Lake* when I was young. When I was working on my thesis in the summer of 2020, I started listening to classical music more often and found it quite enjoyable and relaxing. However, I still do not know much about this genre of music and I certainly do not feel like I can identify the composer of a musical piece on the radio just by listening to it, as my mother can. Therefore, I wanted to take this opportunity to dive more deeply into this genre of music in order to increase my knowledge on its different musical elements and the ways in these can be used by composers to create their own distinct styles. Besides Tchaikovksy, I also chose to analyze works by Mahler, as this is my mother's favorite composer. It would be interesting to see in what ways the styles of our favorite composers differ. Furthermore, Tchaikovsky's pieces are seen as works of the Romantic period, whereas Mahler is seen as a mix of the 19th century Austro-German music tradition and the modernism of the early 20th century. I selected the works that I will analyze by adding the Spotify public playlists "This is Tchaikovsky" (60 tracks) and "This is Mahler" (70 tracks) together. I chose these two playlists, as they were created by Spotify in order to represent work typical for the composers. They are performed by a variety of orcestra's, which means that there coudl be some deviations based on the perfomers' interpretations. I will pay special attention to the most listened to works (on Spotify) of these composers *Swan Lake, Op.20, Act 2: No. 10* and *The Nutcracker, Op 71, Act 2: No. 13* from Tchaikovsky and *Symphony No. 5 in C-sharp Minor: IV* and *Rückert-Lieder: Ich bin der Welt anhanden gekommen*. 
