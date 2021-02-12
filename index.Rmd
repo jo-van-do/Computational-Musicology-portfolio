@@ -5,26 +5,112 @@ date: "9-2-2021"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+
+### Corpus description
+
+For this assignment I will be conducting an exploratory analysis of the works of Pyotr Ilyich Tchaikovsky (1840-1893) to Gustav Mahler (1860-1911). My reasons for choosing to compare these two artists are mostly personal. I do not know much about classical music, as I mostly tend to listen to contemporary music. An exception to this rule is Tchaikovsky, whose musical pieces I have enjoyed listening to ever since my mother and grandmother took me to see *Swan Lake* when I was young. When I was working on my thesis in the summer of 2020, I started listening to classical music more often and found it quite enjoyable and relaxing. However, I still do not know much about this genre of music and I certainly do not feel like I can identify the composer of a musical piece on the radio just by listening to it, as my mother can. Therefore, I wanted to take this opportunity to dive more deeply into this genre of music in order to increase my knowledge on its different musical elements and the ways in these can be used by composers to create their own distinct styles. Besides Tchaikovksy, I also chose to analyze works by Mahler, as this is my mother's favorite composer. It would be interesting to see in what ways the styles of our favorite composers differ. Furthermore, Tchaikovsky's pieces are seen as works of the Romantic period, whereas Mahler is seen as a mix of the 19th century Austro-German music tradition and the modernism of the early 20th century. I selected the works that I will analyze by adding the Spotify public playlists "This is Tchaikovsky" (60 tracks) and "This is Mahler" (70 tracks) together. I chose these two playlists, as they were created by Spotify in order to represent work typical for the composers. They are performed by a variety of orcestra's, which means that there coudl be some deviations based on the perfomers' interpretations. I will pay special attention to the most listened to works (on Spotify) of these composers *Swan Lake, Op.20, Act 2: No. 10* and *The Nutcracker, Op 71, Act 2: No. 13* from Tchaikovsky and *Symphony No. 5 in C-sharp Minor: IV* and *Rückert-Lieder: Ich bin der Welt anhanden gekommen*. 
+
+```{r include=FALSE}
+library(tidyverse)
+library(spotifyr)
+library(formattable)
+library(plotly)
 ```
 
-## R Markdown
+```{r include=FALSE}
+# Downloading the playlists from Spotify
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+tchai <- get_playlist_audio_features("", "37i9dQZF1DX2kvBlhyEkb6")
+mahler <- get_playlist_audio_features("", "37i9dQZF1DWYFH7pZ5xe7h")
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
+```{r include=FALSE}
+# Adding the playlists together into one dataframe
 
-You can also embed plots, for example:
+music <-
+  bind_rows(
+    tchai %>% mutate(category = "Tchaikovsky"),
+    mahler %>% mutate(category = "Mahler")
+  )
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+df <- data.frame(music)
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+### Exploratory Data Analysis
+
+I first created a table of the means of the variables danceability, energy, loudness, valence and tempo of both composers. Tchaikovsky seems to be higher overall in danceability, energy, valence and tempo, whereas Mahler's pieces have been played more loudly. Furthermore, Tchaikovsky has most often composed pieces in Key=2, meaning D (also C-double sharp, E-double flat) . For Mahler, the key in which he most often composed is F (also E-sharp, G-double flat). Both composers have most often composed in major.
+
+```{r echo=FALSE, fig.cap = "Figure 1. Table comparing means and modes of Tchaikovsky and Mahler"}
+# Creating a function to find the statistical mode
+
+getmode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+
+# Creating a table comparing means and modes
+
+MeanTable <- df %>%
+  group_by(Composer = category) %>%
+  summarise(Danceability = mean(danceability),
+            Energy = mean(energy),
+            Key = getmode(key),
+            Loudness = mean(loudness),
+            Mode = getmode(mode),
+            Valence = mean(valence),
+            Tempo= mean(tempo)
+            )
+
+formattable(MeanTable)
+
+```
+
+
+```{r include=FALSE}
+# Creating a dataframe of means to be used in the plot
+
+GraphMeans <- df %>%
+  group_by(category) %>%
+  summarise(valence = mean(valence),
+            energy = mean(energy))
+
+
+```
+
+In the graph underneath, I plotted the tracks for Tchaikovsky and Mahler on their valence and energy. The size of the triangles indicates the measure of danceability, with larger triangles meaning more danceable tracks. The trend for both composers is shown in the lines in the graph. The line representing Tchaikovsky lies higher than the line for Mahler, and the former also reaches further with valence. However, this far reach of the line is based mostly on one point, *Dance des petits cygnes* in *Swan Lake*. and is therefore not necessarily representable for his whole body of work. I also plotted the means for both composers' valence and energy on the graph. Here we can see more clearly that both have composed pieces that are generally low in valence and energy. Looking at the distribution of points, it seems that Mahler especially has the greatest portion of his work in this area, with Tchaikovsky having a somewhat larger amount of variation. Furthermore, there seems to be quite a large variation in danceability, as the triangles vary in sizes. The most danceable tracks also have the highest valence. However there doesn't seem to be a further correlation between valence and danceability from looking at this graph alone, as there are also tracks with higher than average danceability for lower amounts of valence.
+
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE, fig.cap= "Figure 2. Interactive plot comparing Tchaikovsky and Mahler"}
+# Creating a plot comparing valence, energy and danceability of Tchaikovsky and Mahler 
+
+plot1 <-music %>% 
+  ggplot(aes(x = valence, y = energy, color=category, size=danceability)) + 
+  geom_point(shape=17, alpha=0.6, aes(text = paste(
+               "Composer: ", category, "\n",
+               "Track: ", track.name, "\n",
+               "Valence: ", valence, "\n",
+               "Energy: ", energy, "\n",
+               "Danceability: ", danceability, "\n"
+            ))) +
+  geom_point(data=GraphMeans, size=6, aes(text= paste(
+    "Composer: ", category, "\n",
+    "Mean Valence: ", format(round(valence, 2), nsmall=2), "\n",
+    "Mean Energy: ", format(round(energy, 2), nsmall=2), "\n"
+  ))) +
+  geom_smooth(se=F) +
+  theme_classic() +
+  theme(legend.title=element_blank())
+  labs(x = "Valence",
+       y = "Energy",
+       title = "Interactive plot comparing Tchaikovsky and Mahler",
+       size = "Danceability")
+
+  
+ggplotly(plot1, tooltip="text")
+
+```
+
+
+
