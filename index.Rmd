@@ -40,7 +40,7 @@ df <- data.frame(music)
 
 ### Exploratory Data Analysis
 
-I first created a table of the means of the variables danceability, energy, loudness, valence and tempo of both composers. Tchaikovsky seems to be higher overall in danceability, energy, valence and tempo, whereas Mahler's pieces have been played more loudly. Furthermore, Tchaikovsky has most often composed pieces in Key=2, meaning D (also C-double sharp, E-double flat) . For Mahler, the key in which he most often composed is F (also E-sharp, G-double flat). Both composers have most often composed in major.
+I first created a table of the means of the variables danceability, energy, loudness, valence and tempo of both composers, to which I also added the statistical mode's for key and mode. Tchaikovsky seems to be higher overall in danceability, energy, valence and tempo, whereas Mahler's pieces have been played more loudly. Furthermore, Tchaikovsky has most often composed pieces in Key=2, meaning D (also C-double sharp, E-double flat) . For Mahler, the key in which he most often composed is F (also E-sharp, G-double flat). Both composers have most often composed in major.
 
 ```{r echo=FALSE, fig.cap = "Figure 1. Table comparing means and modes of Tchaikovsky and Mahler"}
 # Creating a function to find the statistical mode
