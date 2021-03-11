@@ -39,9 +39,52 @@ df <- data.frame(music)
 
 ```
 
+### **NEW** Looking at the tempo of the most popular dance tracks
 
-### !NEW
-Showing the **chords** of *Nutcracker* and *Symphony no. 5*
+```{r}
+sugar <- get_tidy_audio_analysis("1oDAFTOXZGSQedBa6hXGhT")
+```
+
+
+```{r}
+no5Dance <- get_tidy_audio_analysis("0M78i2tXl07RGPjcm0InHA")
+```
+
+
+```{r}
+
+bind_rows(
+  no5Dance %>%
+    tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) %>%
+    mutate(type= "No. 5"),
+  sugar %>%
+    tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) %>%
+    mutate(type= "Sugar Plum Fairy")
+) %>%
+  mutate() %>%
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  facet_wrap(~type, scales="free") +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)") +
+  theme_classic()
+
+```
+
+
+***
+Tempograms are a tool to show visualizations of the tempo of a given track. There are not perfect, however. Even though us humans have the inate capability to recognize tempo in music, for algorithms it has still proven difficult to recognize beats and tempo.
+
+The algorithms that are trained for tempo recognition tasks are mostly geared towards western pop music. Other styles of music are therefore usually a lot more noisy. The inclusion of percussion instruments in tracks can help the algorithm to recognize tempo. However, in classical music these are not often present. Still, I wanted to see if I could create understandable visualizations of the tempo in two tracks of my sample. For each composer, I chose to look at one track that was known for dance performance. Since Tchaikovsky's music is the basis for multiple famous ballets, I expected his track to present the more clear tempogram.
+
+From Tchaikovsky I chose to feature *Dance of the Sugar Plum Fairy* from *The Nutcracker*, as this is the most viewed ballet clip featuring his music. For Mahler, I again look at *Symphony no. 5 in C sharp minor: 4. Adagietto (sehr langsam)* as this was the music to which Tessa Virtue and Scott Moir performed their figure skating routine at the Vancouver Olympics in 2010. This is the most viewed clip of Mahler's music that contains a dance performance. 
+
+As is clear from the graphs, *Sugar Plum Fairy* indeed produces a tempogram that is quite easy to understand. We can see that the tempo is around 115 BPM throughout the track. Around the 120 second mark, the tempogram all of a sudden becomes choatic and impossible to read. This is at the time when the tempo suddenly changes and speeds up rapidly.
+
+Unfortunately, the tempogram for *Symphony no. 5* is totally illegible. As stated before, the algorithm that was used is biased towards western pop music and has difficulty separating noise in classical music. Whereas *Dance of the Sugar Plum Fairy* features a clear main melody that is repeated throughout the track by the celasta, *Symphony no. 5* does not contain such a central melody. This is likely the main reason for the difference in legibility of the tempograms.
+
+
+### Showing the **chords** of *Nutcracker* and *Symphony no. 5*
 
 ```{r, echo=FALSE}
 circshift <- function(v, n) {
@@ -243,8 +286,7 @@ The dark blue parts represents the tonal center of the chords. In Mahler's (no5)
 This noise is even more visible in the chordogram from the Nutcracker. Most of this piece is supposed to be in D major, but this is not very clear from the graph as the darker blue parts look to be spread out over multiple chords. Although it could be said that the D major chord is the darkest blue after the first +/- 70 seconds. However, in these first 70 seconds the graph is the clearest. During this time at the beginning of the piece, two oboes and a harp are playing the song's intro in A7. After this point, the horns join in and shortly afterwards the rest of the orchestra At this point the chordogram becomes more noisy and unclear as the algorithm is clearly not able to handle a representation of all these different instruments yet.
 
 
-### !NEW
-Showing the **keys** of *Nutcracker* and *Symphony no. 5*
+### Showing the **keys** of *Nutcracker* and *Symphony no. 5*
 
 
 ```{r}
