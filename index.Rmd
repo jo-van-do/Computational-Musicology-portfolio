@@ -12,10 +12,31 @@ output:
 
 ```{r include=FALSE}
 library(tidyverse)
+library(tidymodels)
 library(spotifyr)
 library(compmus)
 library(formattable)
 library(plotly)
+library(ggdendro)
+library(heatmaply)
+library(recipes)
+library(rsample)
+
+get_conf_mat <- function(fit) {
+  outcome <- .get_tune_outcome_names(fit)
+  fit %>% 
+    collect_predictions() %>% 
+    conf_mat(truth = outcome, estimate = .pred_class)
+}  
+
+get_pr <- function(fit) {
+  fit %>% 
+    conf_mat_resampled() %>% 
+    group_by(Prediction) %>% mutate(precision = Freq / sum(Freq)) %>% 
+    group_by(Truth) %>% mutate(recall = Freq / sum(Freq)) %>% 
+    ungroup() %>% filter(Prediction == Truth) %>% 
+    select(class = Prediction, precision, recall)
+}  
 ```
 
 ```{r include=FALSE}
@@ -24,7 +45,12 @@ library(plotly)
 tchai <- get_playlist_audio_features("", "37i9dQZF1DX2kvBlhyEkb6")
 mahler <- get_playlist_audio_features("", "37i9dQZF1DWYFH7pZ5xe7h")
 
+otherComposers <- get_playlist_audio_features("", "1h0CEZCm6IbFTbxThn6Xcs")
+others <- otherComposers[-c(21, 25, 29, 33, 58, 74),]; # without Tchaikovsky and Mahler tracks
+
 ```
+
+
 
 ```{r include=FALSE}
 # Adding the playlists together into one dataframe
@@ -39,7 +65,167 @@ df <- data.frame(music)
 
 ```
 
-### **NEW** Looking at the tempo of the most popular dance tracks
+```{r include=FALSE}
+# Adding the playlists together into one dataframe
+
+musicFull <-
+  bind_rows(
+    tchai %>% mutate(category = "Tchaikovsky"),
+    mahler %>% mutate(category = "Mahler"),
+    others %>% mutate(category= "Other composers")
+  )
+
+
+```
+
+
+### *NEW* How difficult is it to distinguish Mahler and Tchaikovsky from other composers?
+
+```{r}
+music_features <-
+  musicFull %>%  # For your portfolio, change this to the name of your corpus.
+  add_audio_analysis() %>% 
+  mutate(
+    category = factor(category),
+    segments = map2(segments, key, compmus_c_transpose),
+    pitches =
+      map(
+        segments,
+        compmus_summarise, pitches,
+        method = "mean", norm = "manhattan"
+      ),
+    timbre =
+      map(
+        segments,
+        compmus_summarise, timbre,
+        method = "mean",
+      )
+  ) %>%
+  mutate(pitches = map(pitches, compmus_normalise, "clr")) %>%
+  mutate_at(vars(pitches, timbre), map, bind_rows) %>%
+  unnest(cols = c(pitches, timbre))
+```
+
+
+```{r}
+music_recipe <-
+  recipe(
+    category ~
+      danceability +
+      energy +
+      loudness +
+      speechiness +
+      acousticness +
+      instrumentalness +
+      liveness +
+      valence +
+      tempo +
+      duration +
+      C + `C#|Db` + D + `D#|Eb` +
+      E + `F` + `F#|Gb` + G +
+      `G#|Ab` + A + `A#|Bb` + B +
+      c01 + c02 + c03 + c04 + c05 + c06 +
+      c07 + c08 + c09 + c10 + c11 + c12,
+    data = music_features,          # Use the same name as the previous block.
+  ) %>%
+  step_center(all_predictors()) %>%
+  step_scale(all_predictors())      # Converts to z-scores.
+  # step_range(all_predictors())    # Sets range to [0, 1].
+```
+
+
+```{r}
+music_cv <- music_features %>% vfold_cv(5)
+```
+
+
+```{r}
+knn_model <-
+  nearest_neighbor(neighbors = 1) %>%
+  set_mode("classification") %>% 
+  set_engine("kknn")
+
+music_knn <- 
+  workflow() %>% 
+  add_recipe(music_recipe) %>% 
+  add_model(knn_model) %>% 
+  fit_resamples(
+    music_cv, 
+    control = control_resamples(save_pred = TRUE)
+  )
+```
+
+
+```{r eval=FALSE}
+music_knn %>% get_conf_mat()
+```
+
+
+```{r eval=FALSE}
+music_knn %>% get_conf_mat() %>% autoplot(type = "mosaic")
+```
+
+
+```{r}
+music_knn %>% get_conf_mat() %>% autoplot(type = "heatmap")
+```
+
+
+```{r eval=FALSE}
+music_knn %>% get_pr()
+```
+***
+
+I had been working on this assignment for a couple of hours yesterday (Sunday) when all of a sudden my R crashed and my computer froze. When I restarted, I had lost my progression so then I was too frustrated to redo everything :(  Therefore, I just redid the basics and will finish everything once the exam is finished. 
+
+
+
+### What features are most important for distinguishing these composers?
+
+```{r}
+forest_model <-
+  rand_forest() %>%
+  set_mode("classification") %>% 
+  set_engine("ranger", importance = "impurity")
+music_forest <- 
+  workflow() %>% 
+  add_recipe(music_recipe) %>% 
+  add_model(forest_model) %>% 
+  fit_resamples(
+    music_cv, 
+    control = control_resamples(save_pred = TRUE)
+  )
+```
+
+
+```{r eval=FALSE}
+table <- music_forest %>% get_pr()
+
+formattable(table)
+```
+
+
+```{r}
+workflow() %>% 
+  add_recipe(music_recipe) %>% 
+  add_model(forest_model) %>% 
+  fit(music_features) %>% 
+  pluck("fit", "fit", "fit") %>%
+  ranger::importance() %>% 
+  enframe() %>% 
+  mutate(name = fct_reorder(name, value)) %>% 
+  ggplot(aes(name, value)) + 
+  geom_col() + 
+  coord_flip() +
+  theme_minimal() +
+  labs(x = NULL, y = "Importance")
+```
+
+
+
+
+
+### Looking at the tempo of the most popular dance tracks
 
 ```{r}
 sugar <- get_tidy_audio_analysis("1oDAFTOXZGSQedBa6hXGhT")
@@ -51,7 +237,7 @@ no5Dance <- get_tidy_audio_analysis("0M78i2tXl07RGPjcm0InHA")
 ```
 
 
-```{r}
+```{r eval=FALSE}
 
 bind_rows(
   no5Dance %>%
@@ -670,7 +856,7 @@ plot1 <-music %>%
   ))) +
   geom_smooth(se=F) +
   theme_classic() +
-  theme(legend.title=element_blank())
+  theme(legend.title=element_blank()) +
   labs(x = "Valence",
        y = "Energy",
        title = "Interactive plot comparing Tchaikovsky and Mahler",
