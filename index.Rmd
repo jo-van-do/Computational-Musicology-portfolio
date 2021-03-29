@@ -90,7 +90,11 @@ Therefore, I wanted to take this opportunity to dive more deeply into this genre
 
 In this portfolio, I will use tools from music information retrieval to show similarities and differences in the music of these two composers. I will do this mainly by (1) comparing the Spotify playlists of these artists on the basis of the Spotify API (2) comparing their most popular tracks on Spotify on the basis of their harmony and (3) by comparing their most popular dance tracks on youtube on the basis of tempo. 
 
-![Tchaikovksy](pict-tchaikovsky.jpg) ![Mahler](pict-mahler.jpg)
+```{r}
+```
+
+![Tchaikovksy](pict-tchaikovsky.jpg){height=300, width=400} ![Mahler](pict-mahler.jpg){}
+
 
 
 ### Let me explain my **corpus**
@@ -98,7 +102,6 @@ In this portfolio, I will use tools from music information retrieval to show sim
 I selected the works that I will analyze fromthe Spotify public playlists [This is Tchaikovsky](https://open.spotify.com/playlist/37i9dQZF1DX2kvBlhyEkb6?si=f2O_4aeyS0WlShUZnG8SVg) (60 tracks) and [This is Mahler](https://open.spotify.com/playlist/37i9dQZF1DWYFH7pZ5xe7h?si=PrcKVamHSQasslJpWNFRMA) (70 tracks). Hereby I also added the playlist [Best classical music](https://open.spotify.com/playlist/1h0CEZCm6IbFTbxThn6Xcs?si=9l4tY9pfTkisVexBVnEfXw), from which I deleted any tracks by Tchaikovsky (6) or Mahler (0) (resulting in a playlist of 72 tracks). 
 
 I chose these two playlists, as they were created by Spotify in order to represent work typical for the composers. This is of course a subjective decision and it is not clear exactly on what grounds the tracks for these playlists were selected. Furthermore, the tracks are performed by a variety of orchestra's, which means that there could be some deviations based on perfomers' interpretations. Some orchestra's will play certain pieces faster or slower than others, or they will tune their instruments somewhat differently. As my samples for both composers are relatively small, such idiosyncrasies may effect the outcome of my analyses. Therefore, any conclusions drawn in this portfolio are therefore solely applicable to these samples.
-
 
 
 ### Let's first look at the overall **differences** and **similarities** between these two composers
@@ -180,7 +183,7 @@ In the graph underneath, I plotted the tracks for Tchaikovsky and Mahler on thei
 
 ### How difficult is it to distinguish Mahler and Tchaikovsky from **other composers**?
 
-```{r}
+```{r eval=FALSE}
 music_features <-
   musicFull %>%  # For your portfolio, change this to the name of your corpus.
   add_audio_analysis() %>% 
@@ -206,7 +209,7 @@ music_features <-
 ```
 
 
-```{r}
+```{r eval=FALSE}
 music_recipe <-
   recipe(
     category ~
@@ -233,11 +236,11 @@ music_recipe <-
 ```
 
 
-```{r}
+```{r eval=FALSE}
 music_cv <- music_features %>% vfold_cv(5)
 ```
 
-```{r}
+```{r eval=FALSE}
 forest_model <-
   rand_forest() %>%
   set_mode("classification") %>% 
@@ -251,11 +254,11 @@ music_forest <-
     control = control_resamples(save_pred = TRUE)
   )
 
-music_forest %>% get_pr()
+
 ```
 
 
-```{r}
+```{r eval=FALSE}
 map <- music_forest %>% get_conf_mat() %>% autoplot(type = "heatmap")
 
 map <- map+theme(text=element_text(size=13, family="serif")) + scale_fill_gradient(low='#446455', high='#FDD262')
@@ -264,6 +267,7 @@ map
 
 ```
 
+![](matrix.png)
 
 ***
 
@@ -273,10 +277,10 @@ As was visible on the previous page, in the case of Valence and Energy, Tchaikov
   Mahler had especially low instrumentallness compared to both Tchaikovsky and the other composes' playlists. Therefore, music that includes singing could be an important identifier for Mahler as composer. In the next part, I will look at the elements on which the algorithm distinguished these composers.
 
 
-### What features are most important for distinguishing these composers?
+### What features are most important for **distinguishing** these composers?
 
 
-```{r}
+```{r eval=FALSE}
 workflow() %>% 
   add_recipe(music_recipe) %>% 
   add_model(forest_model) %>% 
@@ -297,6 +301,9 @@ workflow() %>%
 
 ```
 
+![](features.png)
+
+
 ***
 In this graph, I plotted the importance of the features on which the random forest algorithm based its decisions to classify what tracks belong to which composer category. 
 
@@ -306,7 +313,7 @@ Als suspected, instrumentallness turns out to be an important element of recogni
 
 ### Diving more deeply into the meaning of Mel-frequency cepstral coefficients with a **ceptogram**
 
-```{r}
+```{r eval=FALSE}
 
 # 
 
@@ -391,7 +398,7 @@ no3Sections <-
   )
 ```
 
-```{r}
+```{r eval=FALSE}
 
 bind_rows(
   swan %>%
@@ -426,6 +433,9 @@ bind_rows(
   
 
 ```
+
+
+![](cepstral.png)
 
 ***
 These graphs show cepstrograms for two tracks that are widely beloved by both composers and coincidentally mine and my mothers' favorites, namely *Swan Lake, Op.20, Act 2: No. 10* (the Swan theme) and *Symphony no. 3 in D Minor: V.* respectively. 
@@ -692,7 +702,7 @@ bind_rows(
   labs(x = "Time (s)", y = "") +
   scale_fill_viridis_c(guide= "none") +                              
   theme_minimal()+
-  theme(text=element_text(size=13, family="serif"), axis.text.y=element_text(size=8))
+  theme(text=element_text(size=13, family="serif"), axis.text.y=element_text(size=6.5))
   
 
 ```
@@ -773,11 +783,12 @@ bind_rows(
     )
   ) +
   geom_tile() +
-  facet_wrap(~type, scales="free")+
+  facet_wrap(~type, scales="free", dir='v')+
   labs(x = "Time (s)", y = "") +
   scale_fill_viridis_c(guide= "none") +                              
   theme_minimal()+
-  theme(text=element_text(size=13, family="serif"))
+  theme(text=element_text(size=13, family="serif"), axis.text.y=element_text(size=8))
+
 
 ```
 
@@ -838,7 +849,7 @@ bind_rows(
 
 
 
-### Looking at the tempo of the most popular dance tracks
+### Looking at the **tempo** of the most popular dance tracks
 
 ```{r}
 sugar <- get_tidy_audio_analysis("1oDAFTOXZGSQedBa6hXGhT")
@@ -850,7 +861,7 @@ no5Dance <- get_tidy_audio_analysis("0M78i2tXl07RGPjcm0InHA")
 ```
 
 
-```{r}
+```{r eval=FALSE}
 
 bind_rows(
   no5Dance %>%
@@ -863,7 +874,7 @@ bind_rows(
   mutate() %>%
   ggplot(aes(x = time, y = bpm, fill = power)) +
   geom_raster() +
-  facet_wrap(~type, scales="free") +
+  facet_wrap(~type, scales="free", dir='v') +
   scale_fill_viridis_c(guide = "none") +
   labs(x = "Time (s)", y = "Tempo (BPM)") +
   theme_classic()+
@@ -871,6 +882,8 @@ bind_rows(
   
 
 ```
+![](tempo.png)
+
 
 
 ***
@@ -890,7 +903,10 @@ In this portfolio, I have used the *This is Mahler* and *This is Tchaikovsky* Sp
 Even though my analyses were based on a pre-selected representation of these composers by Spotify, I think I have still been able to show some basic differences and similarities between (tracks by) Mahler and Tchaikovksy. More importantly, I have gained more familiarity with Mahler's works and I feel like I myself have learned to be better at intuitively distinguishing between classical music composers a bit more. 
 
 
-![](classic_music.jpg)
+
+### Goodbye
+
+![](classic_music.jpg){height=150, width=200}
 
 
 
